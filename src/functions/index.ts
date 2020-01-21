@@ -26,4 +26,4 @@ export const functions = {
   unreferencedReusableObject,
 };
 
-export type DefaultFunctions = typeof functions;
+export type CoreFunctions = typeof functions;
