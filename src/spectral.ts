@@ -27,7 +27,7 @@ import {
   RuleCollection,
   RunRuleCollection,
 } from './types';
-import { IRuleset } from './types/ruleset';
+import { IRuleset, RulesetExceptionCollection } from './types/ruleset';
 import { ComputeFingerprintFunc, defaultComputeResultFingerprint, empty, prepareResults } from './utils';
 
 memoize.Cache = WeakMap;
@@ -39,6 +39,7 @@ export class Spectral {
 
   public functions: FunctionCollection = { ...defaultFunctions };
   public rules: RunRuleCollection = {};
+  public exceptions: RulesetExceptionCollection = {};
   public formats: RegisteredFormats;
 
   private readonly _computeFingerprint: ComputeFingerprintFunc;
@@ -135,11 +136,29 @@ export class Spectral {
     }
   }
 
+  private setExceptions(exceptions: RulesetExceptionCollection) {
+    // TODO:
+    // -split make merger.Exceptions.normalize able to be invoked from here (but without a ruleset uri)
+    // - remove sorting (or any kind of normalization) from that layer and apply it here
+    // => Provide the same validation/normalization feature whether the ruleset is loaded from disk or accepted as an in-memory object
+
+    empty(this.exceptions);
+
+    for (const location in exceptions) {
+      if (!exceptions.hasOwnProperty(location)) continue;
+      const rules = exceptions[location];
+
+      this.exceptions[location] = [...rules];
+    }
+  }
+
   public async loadRuleset(uris: string[] | string, options?: IRulesetReadOptions) {
+    // TODO: create an exception related test layer at setRuleset level
     this.setRuleset(await readRuleset(Array.isArray(uris) ? uris : [uris], options));
   }
 
   public setRuleset(ruleset: IRuleset) {
+    // TODO: create an exception related test layer at setRuleset level
     this.setRules(ruleset.rules);
 
     this.setFunctions(
@@ -164,6 +183,9 @@ export class Spectral {
         },
       ),
     );
+
+    // TODO: Should we accept relative paths for exception locations at that level?
+    this.setExceptions(ruleset.exceptions);
   }
 
   public registerFormat(format: string, fn: FormatLookup) {

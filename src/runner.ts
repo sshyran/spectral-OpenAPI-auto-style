@@ -15,6 +15,31 @@ export const runRules = (
 ): IRuleResult[] => {
   const results: IRuleResult[] = [];
 
+  // TODO:
+  // Ruleset
+  // - should accept both absolute and relative files paths (from the ruleset path)
+  // - should not accept an empty array of rules
+  // - To be investigated: How to propagate to the caller an error in the ruleset format?
+  // - To be investigated: How to cope with STDIN as a source?
+  // LoadRuleSet
+  // - should honor except
+  // - should honor excepts in sub-referenced rulesets
+  // - TODO: Find out how paths that escape out of the root behave
+  // Spectral
+  // - should expose loaded exceptions
+  // - idea: report exceptions hit through a new 'Silenced' Severy level (-2) -> This opens up a wide range of possible user friendly reporting
+  // - (optional) report the exceptions that haven't been triggered (to potentially help the user find out wrong paths)
+  // - (optional) report the exceptions that point at unknown (or silenced) rules (to potentially help the user find out wrong ruleset/excepts)
+  // Cli
+  // - (optional) before the start of analysis, should display something like "x loaded exceptions (spanning y files)"
+  // - (optional) should diplay a warning related to orphaned exceptions (exceptions that haven't been been triggered by the last run) in order to clean up obsolete exceptions
+  // - (optional) report issues that have been silenced
+  // To be investigated
+  // - How can we deal with excepts in a different file than the ruleset? Rulesets and exceptions may have different lifecycle. People designing rulesets may not be part of the team using the rulesets (and facing findings that would require exceptions)
+  //   - Idea: Allow rulesets to only define excepts and leverage the ruleset sub-referencing mechanism to load the blessed ruleset
+  // - Should we compare paths or ranges to identify a hit? (paths looks more straightforward. However if possible to express multiple paths resulting in the same range, range may be safer)
+  // - The issue (https://github.com/stoplightio/spectral/issues/747#issuecomment-555276840) mentions json paths expressions. That may not be handy for pointing at paths within a specified file. Are Json pointers ok?
+
   for (const name in rules) {
     if (!rules.hasOwnProperty(name)) continue;
 

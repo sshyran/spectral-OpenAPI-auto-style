@@ -45,6 +45,13 @@ describe('Spectral', () => {
           },
         }),
       );
+
+      Object.keys(s.exceptions).forEach(p => expect(path.isAbsolute(p)).toEqual(true));
+
+      expect(Object.entries(s.exceptions)).toEqual([
+        [expect.stringMatching('^/test/file.yaml#/object/values/1$'), ['dummy-rule', 'info-matches-stoplight']],
+        [expect.stringMatching('/__tests__/__fixtures__/another.yaml#$'), ['dummy-rule']],
+      ]);
     });
 
     test('should support loading rulesets over http', async () => {

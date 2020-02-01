@@ -14,5 +14,9 @@
         }
       }
     }
+  },
+  "except": {
+    "/test/file.yaml#/object/values/1": ["info-matches-stoplight", "dummy-rule"],
+    "another.yaml#": ["dummy-rule"]
   }
 }
