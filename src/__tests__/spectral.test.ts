@@ -1,10 +1,11 @@
 import { IGraphNodeData } from '@stoplight/json-ref-resolver/types';
 import { DiagnosticSeverity, Dictionary } from '@stoplight/types';
 import { DepGraph } from 'dependency-graph';
-import { merge } from 'lodash';
+import { escapeRegExp, merge } from 'lodash';
 
 import { Document } from '../document';
 import * as Parsers from '../parsers';
+import { buildRulesetExceptionCollectionFrom } from '../rulesets/mergers/__tests__/exceptions.test';
 import { Spectral } from '../spectral';
 import { IResolver, IRunRule, RuleFunction } from '../types';
 
@@ -255,6 +256,37 @@ describe('spectral', () => {
             source,
           },
         ]);
+      });
+    });
+  });
+
+  describe('setRuleset', () => {
+    const s = new Spectral();
+
+    describe('exceptions', () => {
+      it.each([['one.yaml#'], ['one.yaml#/'], ['one.yaml#/toto'], ['down/one.yaml#/toto'], ['../one.yaml#/toto']])(
+        'throws on relative locations  (location: "%s")',
+        location => {
+          const exceptions = buildRulesetExceptionCollectionFrom(location);
+
+          expect(() => {
+            s.setRuleset({ rules: {}, functions: {}, exceptions });
+          }).toThrow(new RegExp(`.+\`${escapeRegExp(location)}\`.+is not a valid uri.+Only absolute Uris are allowed`));
+        },
+      );
+
+      it.each([
+        ['https://dot.com/one.yaml#/toto'],
+        ['/local/one.yaml#/toto'],
+        ['c:/one.yaml#/toto'],
+        ['c:\\one.yaml#/toto'],
+      ])('uses absolute locations as is (location: "%s")', location => {
+        const exceptions = buildRulesetExceptionCollectionFrom(location);
+
+        s.setRuleset({ rules: {}, functions: {}, exceptions });
+
+        const locs = Object.keys(s.exceptions);
+        expect(locs).toEqual([location]);
       });
     });
   });
