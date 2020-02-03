@@ -8,6 +8,7 @@ import * as Parsers from '../parsers';
 import { buildRulesetExceptionCollectionFrom } from '../rulesets/mergers/__tests__/exceptions.test';
 import { Spectral } from '../spectral';
 import { IResolver, IRunRule, RuleFunction } from '../types';
+import { RulesetExceptionCollection } from '../types/ruleset';
 
 const oasRuleset = JSON.parse(JSON.stringify(require('../rulesets/oas/index.json')));
 const oasRulesetRules: Dictionary<IRunRule, string> = oasRuleset.rules;
@@ -263,7 +264,7 @@ describe('spectral', () => {
   describe('setRuleset', () => {
     const s = new Spectral();
 
-    describe('exceptions', () => {
+    describe('exceptions handling', () => {
       it.each([['one.yaml#'], ['one.yaml#/'], ['one.yaml#/toto'], ['down/one.yaml#/toto'], ['../one.yaml#/toto']])(
         'throws on relative locations  (location: "%s")',
         location => {
@@ -287,6 +288,20 @@ describe('spectral', () => {
 
         const locs = Object.keys(s.exceptions);
         expect(locs).toEqual([location]);
+      });
+
+      it('normalizes exceptions', () => {
+        const exceptions: RulesetExceptionCollection = {
+          '/test/file.yaml#/a': ['f', 'c', 'd', 'a'],
+          '/test/file.yaml#/b': ['1', '3', '3', '2'],
+        };
+
+        s.setRuleset({ rules: {}, functions: {}, exceptions });
+
+        expect(s.exceptions).toEqual({
+          '/test/file.yaml#/a': ['a', 'c', 'd', 'f'],
+          '/test/file.yaml#/b': ['1', '2', '3'],
+        });
       });
     });
   });

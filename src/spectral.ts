@@ -11,6 +11,7 @@ import { functions as defaultFunctions } from './functions';
 import * as Parsers from './parsers';
 import { readRuleset } from './rulesets';
 import { compileExportedFunction } from './rulesets/evaluators';
+import { mergeExceptions } from './rulesets/mergers/exceptions';
 import { IRulesetReadOptions } from './rulesets/reader';
 import { DEFAULT_SEVERITY_LEVEL, getDiagnosticSeverity } from './rulesets/severity';
 import { runRules } from './runner';
@@ -137,28 +138,21 @@ export class Spectral {
   }
 
   private setExceptions(exceptions: RulesetExceptionCollection) {
-    // TODO:
-    // -split make merger.Exceptions.normalize able to be invoked from here (but without a ruleset uri)
-    // - remove sorting (or any kind of normalization) from that layer and apply it here
-    // => Provide the same validation/normalization feature whether the ruleset is loaded from disk or accepted as an in-memory object
+    const target: RulesetExceptionCollection = {};
+    mergeExceptions(target, exceptions);
 
     empty(this.exceptions);
 
-    for (const location in exceptions) {
-      if (!exceptions.hasOwnProperty(location)) continue;
-      const rules = exceptions[location];
-
+    Object.entries(target).forEach(([location, rules]) => {
       this.exceptions[location] = [...rules];
-    }
+    });
   }
 
   public async loadRuleset(uris: string[] | string, options?: IRulesetReadOptions) {
-    // TODO: create an exception related test layer at setRuleset level
     this.setRuleset(await readRuleset(Array.isArray(uris) ? uris : [uris], options));
   }
 
   public setRuleset(ruleset: IRuleset) {
-    // TODO: create an exception related test layer at setRuleset level
     this.setRules(ruleset.rules);
 
     this.setFunctions(
