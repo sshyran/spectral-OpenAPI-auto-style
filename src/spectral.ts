@@ -96,7 +96,7 @@ export class Spectral {
     return {
       resolved: inventory.resolved,
       results: prepareResults(
-        [...validationResults, ...runRules(inventory, this.rules, this.functions)],
+        [...validationResults, ...runRules(inventory, this.rules, this.functions, this.exceptions)],
         this._computeFingerprint,
       ),
     };
@@ -178,7 +178,6 @@ export class Spectral {
       ),
     );
 
-    // TODO: Should we accept relative paths for exception locations at that level?
     this.setExceptions(ruleset.exceptions);
   }
 

@@ -4,6 +4,7 @@ import { DocumentInventory } from './documentInventory';
 import { lintNode } from './linter';
 import { getDiagnosticSeverity } from './rulesets/severity';
 import { FunctionCollection, IGivenNode, IRule, IRuleResult, IRunRule, RunRuleCollection } from './types';
+import { RulesetExceptionCollection } from './types/ruleset';
 import { hasIntersectingElement } from './utils/';
 
 export const isRuleEnabled = (rule: IRule) => rule.severity !== void 0 && getDiagnosticSeverity(rule.severity) !== -1;
@@ -12,13 +13,14 @@ export const runRules = (
   documentInventory: DocumentInventory,
   rules: RunRuleCollection,
   functions: FunctionCollection,
+  exceptions: RulesetExceptionCollection,
 ): IRuleResult[] => {
   const results: IRuleResult[] = [];
 
   // TODO:
   // Ruleset
   // - should accept both absolute and relative files paths (from the ruleset path)
-  // - should not accept an empty array of rules
+  // - should not accept an empty array of rules, or rulew with empty names (to enforce in merge vs schema validation?)
   // - To be investigated: How to propagate to the caller an error in the ruleset format?
   // - To be investigated: How to cope with STDIN as a source?
   // LoadRuleSet
