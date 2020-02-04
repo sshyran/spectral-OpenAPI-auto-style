@@ -102,7 +102,7 @@ const createRulesetProcessor = (
         if (extendedRuleset !== null) {
           mergeRules(rules, extendedRuleset.rules, parentSeverity);
           Object.assign(functions, extendedRuleset.functions);
-          mergeExceptions(baseUri, exceptions, extendedRuleset.exceptions);
+          mergeExceptions(exceptions, extendedRuleset.exceptions, baseUri);
         }
       }
     }
@@ -112,7 +112,7 @@ const createRulesetProcessor = (
     }
 
     if (ruleset.except !== void 0) {
-      mergeExceptions(baseUri, exceptions, ruleset.except);
+      mergeExceptions(exceptions, ruleset.except, baseUri);
     }
 
     if (Array.isArray(ruleset.formats)) {
