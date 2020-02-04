@@ -6,6 +6,7 @@ import { getDiagnosticSeverity } from './rulesets/severity';
 import { FunctionCollection, IGivenNode, IRule, IRuleResult, IRunRule, RunRuleCollection } from './types';
 import { RulesetExceptionCollection } from './types/ruleset';
 import { hasIntersectingElement } from './utils/';
+import { pivotExceptions } from './utils/pivotExceptions';
 
 export const isRuleEnabled = (rule: IRule) => rule.severity !== void 0 && getDiagnosticSeverity(rule.severity) !== -1;
 
@@ -42,6 +43,8 @@ export const runRules = (
   // - Should we compare paths or ranges to identify a hit? (paths looks more straightforward. However if possible to express multiple paths resulting in the same range, range may be safer)
   // - The issue (https://github.com/stoplightio/spectral/issues/747#issuecomment-555276840) mentions json paths expressions. That may not be handy for pointing at paths within a specified file. Are Json pointers ok?
 
+  const exceptRuleByLocations = pivotExceptions(exceptions);
+
   for (const name in rules) {
     if (!rules.hasOwnProperty(name)) continue;
 
@@ -60,17 +63,26 @@ export const runRules = (
       continue;
     }
 
+    let ruleResults: IRuleResult[] = [];
+
     try {
-      results.push(...runRule(documentInventory, rule, functions));
+      ruleResults = runRule(documentInventory, rule, functions, exceptRuleByLocations[name]);
     } catch (e) {
       console.error(`Unable to run rule '${name}':\n${e}`);
     }
+
+    results.push(...ruleResults);
   }
 
   return results;
 };
 
-const runRule = (resolved: DocumentInventory, rule: IRunRule, functions: FunctionCollection): IRuleResult[] => {
+const runRule = (
+  resolved: DocumentInventory,
+  rule: IRunRule,
+  functions: FunctionCollection,
+  exceptionLocations: string[] | undefined,
+): IRuleResult[] => {
   const target = rule.resolved === false ? resolved.unresolved : resolved.resolved;
 
   const results: IRuleResult[] = [];
@@ -86,6 +98,7 @@ const runRule = (resolved: DocumentInventory, rule: IRunRule, functions: Functio
         resolved,
         rule,
         functions,
+        exceptionLocations,
         results,
       );
     } else {
@@ -102,6 +115,7 @@ const runRule = (resolved: DocumentInventory, rule: IRunRule, functions: Functio
             resolved,
             rule,
             functions,
+            exceptionLocations,
             results,
           );
         },
@@ -117,6 +131,7 @@ function lint(
   resolved: DocumentInventory,
   rule: IRunRule,
   functions: FunctionCollection,
+  exceptionLocations: string[] | undefined,
   results: IRuleResult[],
 ): void {
   try {
@@ -127,7 +142,7 @@ function lint(
         continue;
       }
 
-      const validationResults = lintNode(node, rule, then, func, resolved);
+      const validationResults = lintNode(node, rule, then, func, resolved, exceptionLocations);
 
       if (validationResults.length > 0) {
         results.push(...validationResults);

@@ -15,6 +15,7 @@ export const lintNode = (
   then: IThen<string, any>,
   apply: IFunction,
   inventory: DocumentInventory,
+  exceptionLocations: string[] | undefined,
 ): IRuleResult[] => {
   const givenPath = node.path[0] === '$' ? node.path.slice(1) : node.path;
   const targets = getLintTargets(node.value, then.field);
