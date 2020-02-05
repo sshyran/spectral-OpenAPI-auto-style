@@ -43,7 +43,7 @@ export const runRules = (
   // - Should we compare paths or ranges to identify a hit? (paths looks more straightforward. However if possible to express multiple paths resulting in the same range, range may be safer)
   // - The issue (https://github.com/stoplightio/spectral/issues/747#issuecomment-555276840) mentions json paths expressions. That may not be handy for pointing at paths within a specified file. Are Json pointers ok?
 
-  const exceptRuleByLocations = pivotExceptions(exceptions);
+  const exceptRuleByLocations = pivotExceptions(exceptions, documentInventory);
 
   for (const name in rules) {
     if (!rules.hasOwnProperty(name)) continue;
