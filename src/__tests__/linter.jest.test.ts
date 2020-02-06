@@ -1,10 +1,11 @@
 import { normalize } from '@stoplight/path';
-import { DiagnosticSeverity } from '@stoplight/types';
+import { DiagnosticSeverity, Dictionary } from '@stoplight/types';
 import * as path from 'path';
 import { httpAndFileResolver } from '../resolvers/http-and-file';
-import { Spectral } from '../spectral';
+import { Rule, Spectral } from '../spectral';
 
 const customFunctionOASRuleset = path.join(__dirname, './__fixtures__/custom-functions-oas-ruleset.json');
+const customOASRuleset = path.join(__dirname, './__fixtures__/custom-oas-ruleset.json');
 const customDirectoryFunctionsRuleset = path.join(__dirname, './__fixtures__/custom-directory-function-ruleset.json');
 
 describe('Linter', () => {
@@ -110,22 +111,24 @@ describe('Linter', () => {
     );
   });
 
+  const emptyIsFalsy: Dictionary<Rule, string> = {
+    'empty-is-falsy': {
+      severity: DiagnosticSeverity.Error,
+      recommended: true,
+      description: 'Should be falsy',
+      message: 'Value {{value|to-string}} should be falsy',
+      given: '$..empty',
+      then: {
+        function: 'falsy',
+      },
+    },
+  };
+
   describe('evaluate "value" in validation messages', () => {
     test('should print correct values for referenced files', async () => {
       spectral = new Spectral({ resolver: httpAndFileResolver });
 
-      spectral.setRules({
-        'empty-is-falsy': {
-          severity: DiagnosticSeverity.Error,
-          recommended: true,
-          description: 'Should be falsy',
-          message: 'Value {{value|to-string}} should be falsy',
-          given: '$..empty',
-          then: {
-            function: 'falsy',
-          },
-        },
-      });
+      spectral.setRules(emptyIsFalsy);
 
       return expect(
         spectral.run(
@@ -169,6 +172,25 @@ describe('Linter', () => {
           }),
         ]),
       );
+    });
+  });
+
+  describe('Exceptions handling', () => {
+    it('should ignore specified exceptions', async () => {
+      await spectral.loadRuleset(customOASRuleset);
+      expect(
+        await spectral.run(
+          {
+            openapi: '3.0.2',
+          },
+          {
+            ignoreUnknownFormat: true,
+            resolve: {
+              documentUri: '/toto/test.yaml',
+            },
+          },
+        ),
+      ).toEqual([]);
     });
   });
 });

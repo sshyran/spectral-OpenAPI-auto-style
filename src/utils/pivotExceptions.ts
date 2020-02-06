@@ -1,5 +1,6 @@
 import { extractPointerFromRef, pointerToPath } from '@stoplight/json';
 import { Dictionary } from '@stoplight/types';
+import { Document } from '../document';
 import { DocumentInventory } from '../documentInventory';
 import { RulesetExceptionCollection } from '../types/ruleset';
 import { getClosestJsonPath } from './refs';
@@ -18,12 +19,15 @@ export const pivotExceptions = (
 
       const pointer = extractPointerFromRef(location);
 
-      const path = pointerToPath(pointer!);
-      const associatedItem = inventory.findAssociatedItemForPath(path, true);
-      const path2 = associatedItem?.path || getClosestJsonPath(inventory.resolved, path);
+      const exceptionPath = pointerToPath(pointer!);
+      const associatedItem = inventory.findAssociatedItemForPath(exceptionPath, true);
+      const path = associatedItem?.path || getClosestJsonPath(inventory.resolved, exceptionPath);
+      const document = associatedItem?.document || inventory.document;
+      const range = document.getRangeForJsonPath(path, true) || Document.DEFAULT_RANGE;
+
       console.log(path);
       console.log(associatedItem);
-      console.log(path2);
+      console.log(range);
       dic[rule].push(location);
     });
   });
