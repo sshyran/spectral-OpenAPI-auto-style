@@ -1,6 +1,7 @@
 import { normalize } from '@stoplight/path';
 import { DiagnosticSeverity, Dictionary } from '@stoplight/types';
 import * as path from 'path';
+import { isOpenApiv3 } from '../formats';
 import { httpAndFileResolver } from '../resolvers/http-and-file';
 import { Rule, Spectral } from '../spectral';
 
@@ -178,6 +179,7 @@ describe('Linter', () => {
   describe('Exceptions handling', () => {
     it('should ignore specified exceptions', async () => {
       await spectral.loadRuleset(customOASRuleset);
+      spectral.registerFormat('oas3', isOpenApiv3);
       expect(
         await spectral.run(
           {
