@@ -1,12 +1,13 @@
 import { decodePointerFragment } from '@stoplight/json';
 import { get } from 'lodash';
 
-import { Document } from './document';
+import { IRange } from '@stoplight/types';
 import { DocumentInventory } from './documentInventory';
 import { IMessageVars, message } from './rulesets/message';
 import { getDiagnosticSeverity } from './rulesets/severity';
 import { IFunction, IGivenNode, IRuleResult, IRunRule, IThen } from './types';
-import { getClosestJsonPath, getLintTargets, printPath, PrintStyle } from './utils';
+import { getLintTargets, printPath, PrintStyle } from './utils';
+import { extractThings } from './utils/extractThings';
 
 // TODO(SO-23): unit test but mock whatShouldBeLinted
 export const lintNode = (
@@ -15,7 +16,7 @@ export const lintNode = (
   then: IThen<string, any>,
   apply: IFunction,
   inventory: DocumentInventory,
-  exceptionLocations: string[] | undefined,
+  exceptionLocations: IRange[] | undefined,
 ): IRuleResult[] => {
   const givenPath = node.path[0] === '$' ? node.path.slice(1) : node.path;
   const targets = getLintTargets(node.value, then.field);
@@ -42,10 +43,9 @@ export const lintNode = (
     results.push(
       ...targetResults.map<IRuleResult>(result => {
         const escapedJsonPath = (result.path || targetPath).map(segment => decodePointerFragment(String(segment)));
-        const associatedItem = inventory.findAssociatedItemForPath(escapedJsonPath, rule.resolved !== false);
-        const path = associatedItem?.path || getClosestJsonPath(inventory.resolved, escapedJsonPath);
+
+        const { associatedItem, path, range } = extractThings(inventory, escapedJsonPath, rule.resolved !== false);
         const document = associatedItem?.document || inventory.document;
-        const range = document.getRangeForJsonPath(path, true) || Document.DEFAULT_RANGE;
         const value = path.length === 0 ? document.data : get(document.data, path);
         const source = associatedItem?.document.source;
 

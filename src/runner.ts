@@ -1,5 +1,6 @@
 const { JSONPath } = require('jsonpath-plus');
 
+import { IRange } from '@stoplight/types';
 import { DocumentInventory } from './documentInventory';
 import { lintNode } from './linter';
 import { getDiagnosticSeverity } from './rulesets/severity';
@@ -43,7 +44,7 @@ export const runRules = (
   // - Should we compare paths or ranges to identify a hit? (paths looks more straightforward. However if possible to express multiple paths resulting in the same range, range may be safer)
   // - The issue (https://github.com/stoplightio/spectral/issues/747#issuecomment-555276840) mentions json paths expressions. That may not be handy for pointing at paths within a specified file. Are Json pointers ok?
 
-  const exceptRuleByLocations = pivotExceptions(exceptions, documentInventory);
+  const exceptRuleByLocations = pivotExceptions(exceptions, documentInventory, rules);
 
   for (const name in rules) {
     if (!rules.hasOwnProperty(name)) continue;
@@ -81,7 +82,7 @@ const runRule = (
   resolved: DocumentInventory,
   rule: IRunRule,
   functions: FunctionCollection,
-  exceptionLocations: string[] | undefined,
+  exceptionLocations: IRange[] | undefined,
 ): IRuleResult[] => {
   const target = rule.resolved === false ? resolved.unresolved : resolved.resolved;
 
@@ -131,7 +132,7 @@ function lint(
   resolved: DocumentInventory,
   rule: IRunRule,
   functions: FunctionCollection,
-  exceptionLocations: string[] | undefined,
+  exceptionLocations: IRange[] | undefined,
   results: IRuleResult[],
 ): void {
   try {

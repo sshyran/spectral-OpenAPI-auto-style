@@ -184,11 +184,12 @@ describe('Linter', () => {
         await spectral.run(
           {
             openapi: '3.0.2',
+            info: 17,
           },
           {
             ignoreUnknownFormat: true,
             resolve: {
-              documentUri: '/toto/test.yaml',
+              documentUri: '/test/file.yaml',
             },
           },
         ),

@@ -1,34 +1,34 @@
 import { extractPointerFromRef, pointerToPath } from '@stoplight/json';
-import { Dictionary } from '@stoplight/types';
-import { Document } from '../document';
+import { Dictionary, IRange } from '@stoplight/types';
 import { DocumentInventory } from '../documentInventory';
+import { IRunRule } from '../types';
 import { RulesetExceptionCollection } from '../types/ruleset';
-import { getClosestJsonPath } from './refs';
+import { extractThings } from './extractThings';
 
 export const pivotExceptions = (
   exceptions: RulesetExceptionCollection,
   inventory: DocumentInventory,
-): Dictionary<string[], string> => {
-  const dic: Dictionary<string[], string> = {};
+  runRules: Dictionary<IRunRule, string>,
+): Dictionary<IRange[], string> => {
+  const dic: Dictionary<IRange[], string> = {};
 
   Object.entries(exceptions).forEach(([location, rules]) => {
-    rules.forEach(rule => {
-      if (!(rule in dic)) {
-        dic[rule] = [];
+    const pointer = extractPointerFromRef(location);
+
+    const exceptionPath = pointerToPath(pointer!);
+
+    rules.forEach(rulename => {
+      const rule = runRules[rulename];
+
+      if (rule !== undefined) {
+        if (!(rulename in dic)) {
+          dic[rulename] = [];
+        }
+
+        const { range } = extractThings(inventory, exceptionPath, rule.resolved !== false);
+
+        dic[rulename].push(range);
       }
-
-      const pointer = extractPointerFromRef(location);
-
-      const exceptionPath = pointerToPath(pointer!);
-      const associatedItem = inventory.findAssociatedItemForPath(exceptionPath, true);
-      const path = associatedItem?.path || getClosestJsonPath(inventory.resolved, exceptionPath);
-      const document = associatedItem?.document || inventory.document;
-      const range = document.getRangeForJsonPath(path, true) || Document.DEFAULT_RANGE;
-
-      console.log(path);
-      console.log(associatedItem);
-      console.log(range);
-      dic[rule].push(location);
     });
   });
 
