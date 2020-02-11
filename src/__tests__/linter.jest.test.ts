@@ -180,20 +180,28 @@ describe('Linter', () => {
     it('should ignore specified exceptions', async () => {
       await spectral.loadRuleset(customOASRuleset);
       spectral.registerFormat('oas3', isOpenApiv3);
-      expect(
-        await spectral.run(
-          {
-            openapi: '3.0.2',
-            info: 17,
+
+      const res = await spectral.run(
+        {
+          openapi: '3.0.2',
+          info: 17,
+        },
+        {
+          ignoreUnknownFormat: true,
+          resolve: {
+            documentUri: '/test/file.yaml',
           },
-          {
-            ignoreUnknownFormat: true,
-            resolve: {
-              documentUri: '/test/file.yaml',
-            },
-          },
-        ),
-      ).toEqual([]);
+        },
+      );
+
+      expect(res).not.toContainEqual([
+        expect.objectContaining({
+          code: 'info-contact',
+        }),
+        expect.objectContaining({
+          code: 'info-description',
+        }),
+      ]);
     });
   });
 });

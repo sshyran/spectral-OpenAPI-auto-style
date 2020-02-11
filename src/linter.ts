@@ -6,7 +6,7 @@ import { DocumentInventory } from './documentInventory';
 import { IMessageVars, message } from './rulesets/message';
 import { getDiagnosticSeverity } from './rulesets/severity';
 import { IFunction, IGivenNode, IRuleResult, IRunRule, IThen } from './types';
-import { getLintTargets, printPath, PrintStyle } from './utils';
+import { getLintTargets, printPath, PrintStyle, rangeEqual } from './utils';
 import { extractThings } from './utils/extractThings';
 
 // TODO(SO-23): unit test but mock whatShouldBeLinted
@@ -81,10 +81,13 @@ export const lintNode = (
       return true;
     }
 
-    console.log('violation', violation);
-    console.log('exceptions', exceptionRanges);
+    for (const range of exceptionRanges) {
+      if (rangeEqual(violation.range, range)) {
+        return false;
+      }
+    }
 
-    return false;
+    return true;
   };
 
   const filtered = results.filter(r => shouldBeKept(r, exceptionLocations));

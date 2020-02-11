@@ -234,9 +234,9 @@ describe('comparePosition', () => {
 });
 
 describe('rangeEqual', () => {
-  const buildRange = (sl: number, sc: number, el: number, ec: number): IRange => {
-    return { start: buildPosition(sl, sc), end: buildPosition(el, ec) };
-  };
+  function buildRange(values: [number, number, number, number]): IRange {
+    return { start: buildPosition(values[0], values[1]), end: buildPosition(values[2], values[3]) };
+  }
 
   const rangeValues: Array<[number, number, number, number]> = [
     [1, 1, 1, 1],
@@ -245,11 +245,28 @@ describe('rangeEqual', () => {
     [1, 1, 2, 2],
   ];
 
-  const rangeTestCases = rangeValues.map<[IRange, IRange]>(([sl, sc, el, ec]) => [
-    buildRange(sl, sc, el, ec),
-    buildRange(sl, sc, el, ec),
-  ]);
-  test.each(rangeTestCases)('should properly identify equal ranges', (left, right) => {
+  const equalRangeTestCases = rangeValues.map<[IRange, IRange]>(range => [buildRange(range), buildRange(range)]);
+
+  test.each(equalRangeTestCases)('should properly identify equal ranges', (left, right) => {
     expect(rangeEqual(left, right)).toEqual(true);
+  });
+
+  const notEqualRangeTestCases = [
+    [buildRange(rangeValues[0]), buildRange(rangeValues[1])],
+    [buildRange(rangeValues[0]), buildRange(rangeValues[2])],
+    [buildRange(rangeValues[0]), buildRange(rangeValues[3])],
+    [buildRange(rangeValues[1]), buildRange(rangeValues[0])],
+    [buildRange(rangeValues[1]), buildRange(rangeValues[2])],
+    [buildRange(rangeValues[1]), buildRange(rangeValues[3])],
+    [buildRange(rangeValues[2]), buildRange(rangeValues[0])],
+    [buildRange(rangeValues[2]), buildRange(rangeValues[1])],
+    [buildRange(rangeValues[2]), buildRange(rangeValues[3])],
+    [buildRange(rangeValues[3]), buildRange(rangeValues[0])],
+    [buildRange(rangeValues[3]), buildRange(rangeValues[1])],
+    [buildRange(rangeValues[3]), buildRange(rangeValues[2])],
+  ];
+
+  test.each(notEqualRangeTestCases)('should properly identify not equal ranges', (left, right) => {
+    expect(rangeEqual(left, right)).toEqual(false);
   });
 });
