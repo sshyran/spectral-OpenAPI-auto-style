@@ -65,17 +65,16 @@ describe('Linter', () => {
 
   it('should respect the scope of defined functions (ruleset-based)', async () => {
     await spectral.loadRuleset(customDirectoryFunctionsRuleset);
-    expect(
-      await spectral.run(
-        {},
-        {
-          ignoreUnknownFormat: true,
-          resolve: {
-            documentUri: '/toto/test.yaml',
-          },
-        },
-      ),
-    ).toEqual([]);
+    expect(await spectral.run({})).toEqual([
+      expect.objectContaining({
+        code: 'has-field-property',
+        message: 'Object does not have field property',
+      }),
+      expect.objectContaining({
+        code: 'has-info-property',
+        message: 'info property is missing',
+      }),
+    ]);
   });
 
   it('should report resolving errors for correct files', async () => {
@@ -194,14 +193,17 @@ describe('Linter', () => {
         },
       );
 
-      expect(res).not.toContainEqual([
+      expect(res).not.toContainEqual(
         expect.objectContaining({
           code: 'info-contact',
         }),
+      );
+
+      expect(res).not.toContainEqual(
         expect.objectContaining({
           code: 'info-description',
         }),
-      ]);
+      );
     });
   });
 });

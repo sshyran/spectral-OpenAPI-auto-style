@@ -16,8 +16,7 @@
     }
   },
   "except": {
-    "/test/file.yaml#/info": ["info-contact"],
-    "/test/other.yaml#/info": ["info-description"],
-    "another.yaml#": ["dummy-rule"]
+    "/test/file.yaml#/info": ["info-contact", "info-description"],
+    "another.yaml#": ["dummy-rule", "info-contact"]
   }
 }

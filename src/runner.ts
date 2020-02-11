@@ -43,6 +43,7 @@ export const runRules = (
   //   - Idea: Allow rulesets to only define excepts and leverage the ruleset sub-referencing mechanism to load the blessed ruleset
   // - Should we compare paths or ranges to identify a hit? (paths looks more straightforward. However if possible to express multiple paths resulting in the same range, range may be safer)
   // - The issue (https://github.com/stoplightio/spectral/issues/747#issuecomment-555276840) mentions json paths expressions. That may not be handy for pointing at paths within a specified file. Are Json pointers ok?
+  // - impact of rule with resolved true vs false
 
   const exceptRuleByLocations = pivotExceptions(exceptions, documentInventory, rules);
 
