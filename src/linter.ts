@@ -43,7 +43,6 @@ export const lintNode = (
     results.push(
       ...targetResults.map<IRuleResult>(result => {
         const escapedJsonPath = (result.path || targetPath).map(segment => decodePointerFragment(String(segment)));
-
         const { associatedItem, path, range } = extractThings(inventory, escapedJsonPath, rule.resolved !== false);
         const document = associatedItem?.document || inventory.document;
         const value = path.length === 0 ? document.data : get(document.data, path);
@@ -77,5 +76,17 @@ export const lintNode = (
     );
   }
 
-  return results;
+  const shouldBeKept = (violation: IRuleResult, exceptionRanges: IRange[] | undefined): boolean => {
+    if (exceptionRanges === undefined) {
+      return true;
+    }
+
+    console.log('violation', violation);
+    console.log('exceptions', exceptionRanges);
+
+    return false;
+  };
+
+  const filtered = results.filter(r => shouldBeKept(r, exceptionLocations));
+  return filtered;
 };
