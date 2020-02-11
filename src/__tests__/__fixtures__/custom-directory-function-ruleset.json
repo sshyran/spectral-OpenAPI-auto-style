@@ -17,8 +17,5 @@
         }
       }
     }
-  },
-  "except": {
-    "/toto/test.yaml#": [ "has-field-property"]
   }
 }
