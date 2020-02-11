@@ -1,6 +1,6 @@
-import { DiagnosticSeverity } from '@stoplight/types';
+import { DiagnosticSeverity, IPosition, IRange } from '@stoplight/types';
 import { IRuleResult } from '../../types';
-import { compareResults, sortResults } from '../sortResults';
+import { comparePosition, compareResults, rangeEqual, sortResults } from '../sortResults';
 
 const results: IRuleResult[] = [
   {
@@ -202,5 +202,54 @@ describe('compareResults', () => {
     ].forEach(tc => {
       expect(compareResults({ ...input, code: tc.one }, { ...input, code: tc.another })).toEqual(tc.expected);
     });
+  });
+});
+
+const buildPosition = (line: number, char: number): IPosition => {
+  return { line, character: char };
+};
+
+describe('comparePosition', () => {
+  const positionTestCases = [
+    [2, 2, 1, 1, 1],
+    [2, 1, 1, 1, 1],
+    [1, 2, 1, 1, 1],
+
+    [1, 1, 1, 1, 0],
+    [1, 2, 1, 2, 0],
+    [2, 1, 2, 1, 0],
+    [2, 2, 2, 2, 0],
+
+    [1, 1, 1, 2, -1],
+    [1, 1, 2, 1, -1],
+    [1, 1, 2, 2, -1],
+  ];
+
+  test.each(positionTestCases)(
+    'should properly order locations (%i, %i) vs (%i, %i)',
+    (leftLine, leftChar, rightLine, rightChar, expected) => {
+      expect(comparePosition(buildPosition(leftLine, leftChar), buildPosition(rightLine, rightChar))).toEqual(expected);
+    },
+  );
+});
+
+describe('rangeEqual', () => {
+  const buildRange = (sl: number, sc: number, el: number, ec: number): IRange => {
+    return { start: buildPosition(sl, sc), end: buildPosition(el, ec) };
+  };
+
+  const rangeValues: Array<[number, number, number, number]> = [
+    [1, 1, 1, 1],
+    [1, 1, 1, 2],
+    [1, 1, 2, 1],
+    [1, 1, 2, 2],
+  ];
+
+  const rangeTestCases = rangeValues.map<[IRange, IRange]>(([sl, sc, el, ec]) => [
+    buildRange(sl, sc, el, ec),
+    buildRange(sl, sc, el, ec),
+  ]);
+  test.each(rangeTestCases)('should properly identify equal ranges', (left, right) => {
+    expect(rangeEqual(left, right)).toEqual(true);
   });
 });
