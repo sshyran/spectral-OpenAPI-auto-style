@@ -2,9 +2,12 @@ import { escapeRegExp } from 'lodash';
 import { RulesetExceptionCollection } from '../../../types/ruleset';
 import { mergeExceptions } from '../exceptions';
 
-export const buildRulesetExceptionCollectionFrom = (loc: string): RulesetExceptionCollection => {
+export const buildRulesetExceptionCollectionFrom = (
+  loc: string,
+  rules: string[] = ['a'],
+): RulesetExceptionCollection => {
   const source = {};
-  source[loc] = ['a'];
+  source[loc] = rules;
   return source;
 };
 
@@ -71,30 +74,50 @@ describe('Ruleset exceptions merging', () => {
       });
     });
 
-    describe('validates locations', () => {
-      const invalidLocations = [
-        'where',
-        '123.yaml',
-        '../123.yaml',
-        '##where',
-        '#where',
-        '#',
-        '#/where',
-        '../123.yaml#where',
-      ];
+    describe('Validation', () => {
+      describe('Invalid locations', () => {
+        const invalidLocations = [
+          'where',
+          '123.yaml',
+          '../123.yaml',
+          '##where',
+          '#where',
+          '#',
+          '#/where',
+          '../123.yaml#where',
+        ];
 
-      it.each(invalidLocations)(
-        'throws when locations are not valid uris (including fragment): "%s"',
-        async location => {
-          const source = buildRulesetExceptionCollectionFrom(location);
+        it.each(invalidLocations)(
+          'throws when locations are not valid uris (including fragment): "%s"',
+          async location => {
+            const source = buildRulesetExceptionCollectionFrom(location);
 
-          expect(() => {
-            mergeExceptions({}, source, dummyRulesetUri);
-          }).toThrow(
-            new RegExp(`.+\`${escapeRegExp(dummyRulesetUri)}\`.+\`${escapeRegExp(location)}\`.+is not a valid uri`),
-          );
-        },
-      );
+            expect(() => {
+              mergeExceptions({}, source, dummyRulesetUri);
+            }).toThrow(
+              new RegExp(`.+\`${escapeRegExp(dummyRulesetUri)}\`.+\`${escapeRegExp(location)}\`.+is not a valid uri`),
+            );
+          },
+        );
+      });
+
+      describe('throws on empty rules array', () => {
+        const location = 'one.yaml#/';
+        const source = buildRulesetExceptionCollectionFrom(location, []);
+
+        expect(() => {
+          mergeExceptions({}, source, dummyRulesetUri);
+        }).toThrow(new RegExp(`.+\`${escapeRegExp(dummyRulesetUri)}\`.+\`${escapeRegExp(location)}\`.+blargh`));
+      });
+
+      describe('throws on empty rule name', () => {
+        const location = 'one.yaml#/';
+        const source = buildRulesetExceptionCollectionFrom(location, ['b', '']);
+
+        expect(() => {
+          mergeExceptions({}, source, dummyRulesetUri);
+        }).toThrow(new RegExp(`.+\`${escapeRegExp(dummyRulesetUri)}\`.+\`${escapeRegExp(location)}\`.+blargh2`));
+      });
     });
 
     describe('Normalization', () => {

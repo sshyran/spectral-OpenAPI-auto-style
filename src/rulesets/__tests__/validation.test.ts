@@ -246,11 +246,8 @@ describe('Ruleset Validation', () => {
   describe('Exceptions validation', () => {
     const rulesetsWithInvalidExceptStructures = [
       { extends: ['foo'], except: '' },
-      { extends: ['foo'], except: {} },
       { extends: ['foo'], except: { one: null } },
-      { extends: ['foo'], except: { one: [] } },
       { extends: ['foo'], except: { one: [1] } },
-      { extends: ['foo'], except: { one: [''] } },
     ];
 
     it.each(rulesetsWithInvalidExceptStructures)('throws when defined "except" do not match schema', async r => {

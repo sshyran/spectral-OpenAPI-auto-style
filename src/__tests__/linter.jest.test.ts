@@ -176,7 +176,7 @@ describe('Linter', () => {
   });
 
   describe('Exceptions handling', () => {
-    it('should ignore specified exceptions', async () => {
+    it('should ignore specified rules violations in a standalone document', async () => {
       await spectral.loadRuleset(customOASRuleset);
       spectral.registerFormat('oas3', isOpenApiv3);
 
@@ -193,6 +193,8 @@ describe('Linter', () => {
         },
       );
 
+      expect(res.length).toBeGreaterThan(0);
+
       expect(res).not.toContainEqual(
         expect.objectContaining({
           code: 'info-contact',
@@ -204,6 +206,14 @@ describe('Linter', () => {
           code: 'info-description',
         }),
       );
+    });
+
+    it('should ignore specified rules violations in a referenced document', async () => {
+      expect(false).toBeTruthy();
+    });
+
+    it('should ignore specified rules violations in "resolved=false" mode', async () => {
+      expect(false).toBeTruthy();
     });
   });
 });

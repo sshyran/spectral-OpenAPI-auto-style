@@ -6,25 +6,29 @@ const normalize = ($ref: string, rulesetUri?: string): string => {
   const source = extractSourceFromRef($ref);
 
   if (typeof source !== 'string') {
-    throw new Error(buildErrorMessage($ref, rulesetUri, 'Missing source'));
+    throw new Error(buildInvalidUriErrorMessage($ref, rulesetUri, 'Missing source'));
   }
 
   if (rulesetUri === undefined && !isAbsolute(source)) {
     throw new Error(
-      buildErrorMessage($ref, rulesetUri, 'Only absolute Uris are allowed when no base ruleset uri has been provided'),
+      buildInvalidUriErrorMessage(
+        $ref,
+        rulesetUri,
+        'Only absolute Uris are allowed when no base ruleset uri has been provided',
+      ),
     );
   }
 
   const pointer = extractPointerFromRef($ref);
 
   if (typeof pointer !== 'string') {
-    throw new Error(buildErrorMessage($ref, rulesetUri, 'Missing pointer fragment'));
+    throw new Error(buildInvalidUriErrorMessage($ref, rulesetUri, 'Missing pointer fragment'));
   }
 
   try {
     pointerToPath(pointer);
   } catch {
-    throw new Error(buildErrorMessage($ref, rulesetUri));
+    throw new Error(buildInvalidUriErrorMessage($ref, rulesetUri));
   }
 
   if (isAbsolute(source)) return $ref;
@@ -36,13 +40,19 @@ const normalize = ($ref: string, rulesetUri?: string): string => {
   return join(rulesetUri, '..', source) + pointer;
 };
 
-const buildErrorMessage = ($ref: string, rulesetUri?: string, precision?: string): string => {
-  if (rulesetUri !== undefined)
-    return `Ruleset \`${rulesetUri}\` exposes an \`except\` key \`${$ref}\` which is not a valid uri${
-      precision ? ` (${precision})` : ''
-    }.`;
+const buildErrorMessagePrefix = ($ref: string, rulesetUri?: string): string => {
+  let prefix = '';
 
-  return `\`except\` key \`${$ref}\` is not a valid uri${precision ? ` (${precision})` : ''}.`;
+  if (rulesetUri !== undefined) prefix += `in ruleset \`${rulesetUri}\`, `;
+
+  return prefix + `\`except\` entry (key \`${$ref}\`) is malformed. `;
+};
+
+const buildInvalidUriErrorMessage = ($ref: string, rulesetUri?: string, precision?: string): string => {
+  return (
+    buildErrorMessagePrefix($ref, rulesetUri) +
+    `Key \`${$ref}\` is not a valid uri${precision ? ` (${precision})` : ''}.`
+  );
 };
 
 export function mergeExceptions(
@@ -56,7 +66,16 @@ export function mergeExceptions(
 
     const set = new Set(targetRules);
 
-    sourceRules.forEach(r => set.add(r));
+    if (sourceRules.length === 0) {
+      throw new Error(buildErrorMessagePrefix(location, baseUri) + 'An empty array of rules has been provided.');
+    }
+
+    sourceRules.forEach(r => {
+      if (r.length === 0) {
+        throw new Error(buildErrorMessagePrefix(location, baseUri) + 'A rule with an empty name has been provided.');
+      }
+      set.add(r);
+    });
 
     target[normalizedLocation] = [...set].sort();
   }

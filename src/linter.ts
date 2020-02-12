@@ -76,20 +76,20 @@ export const lintNode = (
     );
   }
 
-  const shouldBeKept = (violation: IRuleResult, exceptionRanges: IRange[] | undefined): boolean => {
-    if (exceptionRanges === undefined) {
-      return true;
-    }
-
+  const isAKnownException = (violation: IRuleResult, exceptionRanges: IRange[]): boolean => {
     for (const range of exceptionRanges) {
       if (rangeEqual(violation.range, range)) {
-        return false;
+        return true;
       }
     }
 
-    return true;
+    return false;
   };
 
-  const filtered = results.filter(r => shouldBeKept(r, exceptionLocations));
+  if (exceptionLocations === undefined) {
+    return results;
+  }
+
+  const filtered = results.filter(r => !isAKnownException(r, exceptionLocations));
   return filtered;
 };
